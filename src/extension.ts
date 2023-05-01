@@ -1,26 +1,101 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import * as fs from "fs";
+import { initializeLog, logMessage, collapseExpandPath, CollapseExpand, showInFileExplorer, showInVSCode } from "./util";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "sidekick" is now active!');
+	initializeLog("Sidekick");
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('sidekick.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Sidekick!');
-	});
+	context.subscriptions.push(vscode.commands.registerCommand("sidekick.showInFileExplorer", async () => {
+		const diskPath = detectPathAtCurrentPosition();
+		if (diskPath && fs.existsSync(diskPath)) {
+			showInFileExplorer(diskPath);
+		} else {
+			logMessage("No path detected at current position");
+		}
+	}));
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(vscode.commands.registerCommand("sidekick.showInVSCode", async () => {
+		const diskPath = detectPathAtCurrentPosition();
+		if (diskPath && fs.existsSync(diskPath)) {
+			showInVSCode(diskPath);
+		} else {
+			logMessage("No path detected at current position");
+		}
+	}));
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
+
+function detectPathAtCurrentPosition(): string {
+
+	let expandableVariables: string[] = [];
+
+	const configuredVariables = vscode.workspace.getConfiguration("sidekick").get("pathVariables") as string[];
+	if (configuredVariables && configuredVariables.length) {
+		expandableVariables = configuredVariables;
+	}
+
+	const selection = vscode.window.activeTextEditor?.selection;
+	if (!selection) {
+		return "";
+	}
+
+	const editor = vscode.window.activeTextEditor!;
+
+	const collapseExpandReplace = (pathCandidate: string, editionRange: vscode.Range) : string => {
+		const expendedPath = collapseExpandPath(pathCandidate, expandableVariables, CollapseExpand.expand);
+		if (fs.existsSync(expendedPath)) {
+			const collapsedPath = collapseExpandPath(expendedPath, expandableVariables, CollapseExpand.collapse);
+			if (collapsedPath !== pathCandidate) {
+				editor.edit(edit => edit.replace(editionRange, collapsedPath));
+			}
+			return expendedPath;
+		}
+		return "";
+	};
+
+	if (!selection.isEmpty && selection.start.line === selection.end.line) {
+		const selectionRange = new vscode.Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
+		const selectedText = editor.document.getText(selectionRange);
+		const selectionCandidate = collapseExpandReplace(selectedText, selectionRange);
+		if (selectionCandidate) {
+			return selectionCandidate;
+		}
+	}
+
+	const currentLineRange = editor.document.lineAt(selection.active.line).range;
+	const currentLineText = editor.document.getText(currentLineRange);
+	const lineCandidate = collapseExpandReplace(currentLineText, currentLineRange);
+	if (lineCandidate) {
+		return lineCandidate;
+	}
+
+	let pathPattern: RegExp | undefined;
+	try {
+		const configuredPattern = vscode.workspace.getConfiguration("sidekick").get("pathPattern") as string;
+		if (configuredPattern) {
+			pathPattern = new RegExp(configuredPattern, "i");
+		}
+	} catch (e: any) {
+		logMessage(`Problem reading configured pattern for path detection: ${e}`, true);
+	} finally {
+		logMessage(`Pattern used for path detection is: "${pathPattern}"`);
+	}
+
+	if (pathPattern) {
+		const match = currentLineText.match(pathPattern);
+		if (match) {
+			const matchedText = currentLineText.slice(match.index!, match.index! + match[0].length);
+
+			editor.selection = new vscode.Selection(currentLineRange.start.line, match.index!, currentLineRange.start.line, match.index! + match[0].length);
+
+			const patternCandidate = collapseExpandReplace(matchedText, editor.selection);
+			if (patternCandidate) {
+				return patternCandidate;
+			}
+		}
+	}
+
+	return "";
+}

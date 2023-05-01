@@ -1,23 +1,69 @@
 {
   "name": "sidekick",
   "displayName": "Sidekick",
-  "description": "",
-  "version": "0.0.1",
+  "description": "Mixed power user tools potpourri",
+  "version": "0.0.2",
   "engines": {
-    "vscode": "^1.77.0"
+    "vscode": "^1.70.0"
+  },
+  "publisher": "ziembla",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ziembla/vsce-sidekick"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "sidekick.helloWorld",
-        "title": "Hello World"
+        "command": "sidekick.showInFileExplorer",
+        "title": "Sidekick: Show in File Explorer",
+        "icon": "$(file-symlink-directory)"
+      },
+      {
+        "command": "sidekick.showInVSCode",
+        "title": "Sidekick: Show in VS Code",
+        "icon": "$(file-symlink-file)"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "sidekick.showInFileExplorer",
+        "key": "ctrl+oem_5"
+      },
+      {
+        "command": "sidekick.showInVSCode",
+        "key": "ctrl+shift+oem_5",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "properties": {
+        "sidekick.pathPattern": {
+          "description": "Regular expression pattern to detect path in a line of text",
+          "type": "string",
+          "default": "(?<=[<])[^<>]+(?=[>])"
+        },
+        "sidekick.pathVariables": {
+          "description": "Environment variable names to be replaced in paths",
+          "type": "array",
+          "default": [
+            "AppData",
+            "LocalAppData",
+            "UserProfile",
+            "HOME"
+          ]
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -25,10 +71,11 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
   },
   "devDependencies": {
-    "@types/vscode": "^1.77.0",
+    "@types/vscode": "~1.70.0",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
