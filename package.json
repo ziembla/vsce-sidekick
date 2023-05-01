@@ -1,11 +1,13 @@
 {
   "name": "sidekick",
   "displayName": "Sidekick",
-  "description": "Mixed power user tools potpourri",
-  "version": "0.0.2",
+  "description": "Power user's tools for VS Code",
+  "icon": "resources/ziembla-128x128.png",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.70.0"
   },
+  "license": "MIT",
   "publisher": "ziembla",
   "repository": {
     "type": "git",
