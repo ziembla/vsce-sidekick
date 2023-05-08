@@ -1,92 +1,138 @@
 {
-  "name": "sidekick",
-  "displayName": "Sidekick",
-  "description": "Power user's tools for VS Code",
-  "icon": "resources/ziembla-128x128.png",
-  "version": "0.0.3",
-  "engines": {
-    "vscode": "^1.70.0"
-  },
-  "license": "MIT",
-  "publisher": "ziembla",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ziembla/vsce-sidekick"
-  },
-  "categories": [
-    "Other"
-  ],
-  "extensionKind": [
-    "workspace"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "sidekick.showInFileExplorer",
-        "title": "Sidekick: Show in File Explorer",
-        "icon": "$(file-symlink-directory)"
-      },
-      {
-        "command": "sidekick.showInVSCode",
-        "title": "Sidekick: Show in VS Code",
-        "icon": "$(file-symlink-file)"
-      }
+    "name": "sidekick",
+    "displayName": "Sidekick",
+    "description": "Power user's tools for VS Code",
+    "icon": "resources/ziembla-128x128.png",
+    "version": "0.0.9",
+    "engines": {
+        "vscode": "^1.70.0"
+    },
+    "license": "MIT",
+    "publisher": "ziembla",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ziembla/vsce-sidekick"
+    },
+    "categories": [
+        "Other"
     ],
-    "keybindings": [
-      {
-        "command": "sidekick.showInFileExplorer",
-        "key": "ctrl+oem_5"
-      },
-      {
-        "command": "sidekick.showInVSCode",
-        "key": "ctrl+shift+oem_5",
-        "when": "editorTextFocus"
-      }
+    "extensionKind": [
+        "workspace"
     ],
-    "configuration": {
-      "properties": {
-        "sidekick.pathPattern": {
-          "description": "Regular expression pattern to detect path in a line of text",
-          "type": "string",
-          "default": "(?<=[<])[^<>]+(?=[>])"
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "sidekick.showInFileExplorer",
+                "title": "Sidekick: Show in File Explorer",
+                "icon": "$(file-symlink-directory)"
+            },
+            {
+                "command": "sidekick.showInVSCode",
+                "title": "Sidekick: Show in VS Code",
+                "icon": "$(file-symlink-file)"
+            },
+            {
+                "command": "sidekick.openWithApp",
+                "title": "Sidekick: Open with registered application",
+                "icon": "$(play)"
+            },
+            {
+                "command": "sidekick.openSelectionWithApp",
+                "title": "Sidekick: Open selection with registered application",
+                "icon": "$(play)"
+            },
+            {
+                "command": "sidekick.open",
+                "title": "Sidekick: Open",
+                "icon": "$(play)",
+                "when": "editorTextFocus"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "sidekick.open",
+                "key": "ctrl+oem_5",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "sidekick.openSelectionWithApp",
+                "key": "ctrl+shift+oem_5",
+                "when": "editorTextFocus && editorHasSelection"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "when": "editorTextFocus && editorHasSelection",
+                    "command": "sidekick.openSelectionWithApp"
+                }                
+            ],
+            "explorer/context": [
+                {
+                    "command": "sidekick.showInFileExplorer",
+                    "group": "sidekick@1"
+                },
+                {
+                    "when": "!explorerResourceIsFolder",
+                    "command": "sidekick.showInVSCode",
+                    "group": "sidekick@2"
+                },
+                {
+                    "when": "!explorerResourceIsFolder",
+                    "command": "sidekick.openWithApp",
+                    "group": "sidekick@3"
+                }
+            ]
         },
-        "sidekick.pathVariables": {
-          "description": "Environment variable names to be replaced in paths",
-          "type": "array",
-          "default": [
-            "AppData",
-            "LocalAppData",
-            "UserProfile",
-            "HOME"
-          ]
+        "configuration": {
+            "properties": {
+                "sidekick.pathPattern": {
+                    "description": "Regular expression pattern to detect path in a line of text",
+                    "type": "string",
+                    "default": "(?<=[<])[^<>]+(?=[>])"
+                },
+                "sidekick.pathVariables": {
+                    "description": "Environment variable names to be replaced in paths",
+                    "type": "array",
+                    "default": [
+                        "AppData",
+                        "LocalAppData",
+                        "UserProfile",
+                        "HOME"
+                    ]
+                },
+                "sidekick.externalFilePattern": {
+                    "description": "Regular expression pattern to detect files to be opened in external application",
+                    "type": "string",
+                    "default": "[.](xlsx|docx)$"
+                }
+            }
         }
-      }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/vscode": "~1.70.0",
+        "@types/glob": "^8.1.0",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "16.x",
+        "@typescript-eslint/eslint-plugin": "^5.59.1",
+        "@typescript-eslint/parser": "^5.59.1",
+        "eslint": "^8.39.0",
+        "glob": "^8.1.0",
+        "mocha": "^10.2.0",
+        "typescript": "^5.0.4",
+        "@vscode/test-electron": "^2.3.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
-    "package": "vsce package"
-  },
-  "devDependencies": {
-    "@types/vscode": "~1.70.0",
-    "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
-    "eslint": "^8.39.0",
-    "glob": "^8.1.0",
-    "mocha": "^10.2.0",
-    "typescript": "^5.0.4",
-    "@vscode/test-electron": "^2.3.0"
-  }
 }

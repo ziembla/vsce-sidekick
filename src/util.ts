@@ -37,10 +37,18 @@ export function showInFileExplorer(diskPath: string) {
     }
 }
 
-export function showInVSCode(diskPath: string) {
+export function showInVSCode(diskPath: string, line: number = 1) {
     logMessage(`showing in vscode: "${diskPath}"`);
     if (fs.existsSync(diskPath) && fs.statSync(diskPath).isFile()) {
-        vscode.commands.executeCommand("vscode.open", vscode.Uri.file(diskPath));
+        const position = new vscode.Position(line, 1);
+        vscode.commands.executeCommand("vscode.open", vscode.Uri.file(diskPath), position);
+    }
+}
+
+export function openWithApp(target: string) {
+    logMessage(`opening with registered application: "${target}"`, !isWindows());
+    if (isWindows()) {
+        execFile("cmd.exe", ["/c", "start", "", target]); // .unref();
     }
 }
 
