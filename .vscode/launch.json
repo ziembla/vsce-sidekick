@@ -6,17 +6,17 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
+			"name": "Run Sidekick Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"/tsdev/workbench/sample-data-folder/",
+				"/tsdev/sample-data/",
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "build sidekick" //"${defaultBuildTask}"
 		},
 		{
 			"name": "Extension Tests",
