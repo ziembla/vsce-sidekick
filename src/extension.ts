@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { Openable } from "./openable";
-import { initializeLog, logMessage, collapseExpandPath, CollapseExpand, showInFileExplorer, showInVSCode, openWithApp } from "./util";
+import { initializeLog, logMessage, collapseExpandPath, CollapseExpand, showInFileExplorer, showInVSCode, openWithApp, isWindows } from "./util";
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -70,6 +70,59 @@ export function activate(context: vscode.ExtensionContext) {
 			openable.open();
 		} else {
 			logMessage(`Nothing to "open" at current position`);
+		}
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand("sidekick.unifySlashes", async () => {
+
+		const selection = vscode.window.activeTextEditor?.selection;
+		if (!selection || selection.isEmpty) {
+			// logMessage(`Nothing to replace`, true);
+			return;
+		}
+
+		const slashes = ["\\", "/"];
+		const preference = isWindows() ? 0 : 1;
+
+		const targetPick: vscode.QuickPickItem | undefined = await vscode.window.showQuickPick(
+			[
+				{ label: slashes[preference], description: "(default)" },
+				{ label: slashes[1-preference] }
+			],
+			{
+				placeHolder: "Choose target slash type:"
+        	}
+		);
+		if (!targetPick) {
+			return;
+		} 
+
+		const compressPick: vscode.QuickPickItem | undefined = await vscode.window.showQuickPick(
+			[
+				{ label: "yes", description: "(default)" },
+				{ label: "no" }
+			],
+			{
+				placeHolder: "Compress slash sequences into single character?"
+        	}
+		);
+		if (!compressPick) {
+			return;
+		} 
+		
+		const targetSlash: string = targetPick.label;
+		const compress: boolean = compressPick.label === "yes";
+		
+		const editor = vscode.window.activeTextEditor!;
+		const selectionRange = new vscode.Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
+		const selectedText = editor.document.getText(selectionRange);
+
+		const replacedText = selectedText.replace(compress ? /[\/\\]+/g : /[\/\\]/g, targetSlash);
+		if (replacedText !== selectedText) {
+			// logMessage(`"${selectedText}" -> "${replacedText}"`, true);
+			editor.edit(edit => edit.replace(selection, replacedText));
+		} else {
+			// logMessage(`Nothing replaced in "${selectedText}"`, true);
 		}
 	}));
 
