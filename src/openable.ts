@@ -13,9 +13,9 @@ export class Openable {
     ) {
     }
 
-    private static directoryPattern = new RegExp("^(.*)[/\]+$");
-    private static lineNumberPattern = new RegExp("^(.*):([0-9]+)$");
-    private static searchPhrasePattern = new RegExp("^(.*)::(.+)$");
+    private static directoryPattern: RegExp = /^(.*?)[\/\\]+$/;
+    private static lineNumberPattern = new RegExp("^(.*?):([0-9]+)$");
+    private static searchPhrasePattern = new RegExp("^(.*?)::(.+)$");
 
     static parse(target: string, baseDirectoryPath?: string, externalAppFilePattern?: RegExp): Openable | undefined {
 
@@ -33,6 +33,9 @@ export class Openable {
         if (directoryMatch) {
             directory = true;
             target = directoryMatch[1];
+            if (!target.length) {
+                target = "/";
+            }
         } else {
             const lineNumberMatch = target.match(this.lineNumberPattern);
             if (lineNumberMatch) {
